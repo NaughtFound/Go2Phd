@@ -25,11 +25,11 @@ func NewAuthService(clientID, clientSecret, redirectURL string) *AuthService {
 	}
 }
 
-func (s *AuthService) GetAuthURL() string {
+func (s *AuthService) GetAuthURL(state string) string {
 	return s.oauthConfig.AuthCodeURL(
-		"state-token",
+		state,
 		oauth2.AccessTypeOffline,
-		oauth2.ApprovalForce, // Forces Google to issue a new refresh token every time
+		oauth2.ApprovalForce,
 	)
 }
 
