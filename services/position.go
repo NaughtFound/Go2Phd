@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"time"
 
 	"naughtfound.github.io/go2phd/models"
 	"naughtfound.github.io/go2phd/repositories"
@@ -40,7 +39,7 @@ func (s *PositionService) FetchAllPositions(refreshToken, spreadsheetID, sheetNa
 		return []models.Position{}, nil
 	}
 
-	var positions []models.Position
+	var positions = make([]models.Position, 0)
 
 	for i, row := range rows[1:] {
 		pos := parseRowToPosition(i+1, row)
@@ -49,6 +48,10 @@ func (s *PositionService) FetchAllPositions(refreshToken, spreadsheetID, sheetNa
 			if uni, err := s.uniRepo.GetByName(pos.University.Name); err == nil {
 				pos.University = uni
 			}
+		}
+
+		if len(pos.Title) == 0 {
+			continue
 		}
 
 		positions = append(positions, pos)
@@ -68,16 +71,6 @@ func parseRowToPosition(id int, row []any) models.Position {
 		}
 		return ""
 	}
-
-	// Column Mapping (assuming sheet column order):
-	// Col 0: Title
-	// Col 1: Priority
-	// Col 2: Tags (comma-separated: "AI, Go, Microservices")
-	// Col 3: Status
-	// Col 4: University Name
-	// Col 5: Due date (e.g. "2026-11-15" or "2026-11-15T00:00:00Z")
-	// Col 6: RollingBased ("true"/"false" or "TRUE"/"FALSE")
-	// Col 7: Links (comma-separated or single URL)
 
 	pos.Title = getCol(0)
 	pos.Priority = models.Priority(getCol(1))
@@ -99,12 +92,7 @@ func parseRowToPosition(id int, row []any) models.Position {
 		pos.University = models.University{Name: uniName}
 	}
 
-	rawDueDate := getCol(5)
-	if rawDueDate != "" {
-		if parsedDate, err := parseDate(rawDueDate); err == nil {
-			pos.DueDate = &parsedDate
-		}
-	}
+	pos.DueDate = getCol(5)
 
 	rawRolling := strings.ToLower(getCol(6))
 	if b, err := strconv.ParseBool(rawRolling); err == nil {
@@ -115,7 +103,7 @@ func parseRowToPosition(id int, row []any) models.Position {
 
 	rawLinks := getCol(7)
 	if rawLinks != "" {
-		linkList := strings.SplitSeq(rawLinks, ",")
+		linkList := strings.SplitSeq(rawLinks, " ")
 		for l := range linkList {
 			if trimmed := strings.TrimSpace(l); trimmed != "" {
 				pos.Links = append(pos.Links, trimmed)
@@ -124,22 +112,4 @@ func parseRowToPosition(id int, row []any) models.Position {
 	}
 
 	return pos
-}
-
-func parseDate(dateStr string) (time.Time, error) {
-	formats := []string{
-		"2006-01-02",
-		"2006-01-02T15:04:05Z07:00",
-		"01/02/2006",
-		"02/01/2006",
-		"2006/01/02",
-	}
-
-	for _, fmtStr := range formats {
-		if t, err := time.Parse(fmtStr, dateStr); err == nil {
-			return t, nil
-		}
-	}
-
-	return time.Time{}, fmt.Errorf("unsupported date format: %s", dateStr)
 }

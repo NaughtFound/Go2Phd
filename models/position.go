@@ -1,7 +1,5 @@
 package models
 
-import "time"
-
 type Priority string
 type Status string
 
@@ -31,7 +29,7 @@ type Position struct {
 	Tags         []string   `json:"tags"`
 	Status       Status     `json:"status"`
 	University   University `json:"university"`
-	DueDate      *time.Time `json:"due_date,omitempty"`
+	DueDate      string     `json:"due_date,omitempty"`
 	RollingBased bool       `json:"rolling_based"`
 	Links        []string   `json:"links"`
 }
