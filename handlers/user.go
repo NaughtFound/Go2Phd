@@ -23,3 +23,7 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, user)
 }
+
+func (h *UserHandler) SetupGroup(r *gin.RouterGroup) {
+	r.GET("/:id", h.GetUser)
+}
