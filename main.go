@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -19,6 +20,15 @@ func main() {
 	clientID := os.Getenv("GOOGLE_CLIENT_ID")
 	clientSecret := os.Getenv("GOOGLE_CLIENT_SECRET")
 	redirectURL := os.Getenv("GOOGLE_REDIRECT_URL")
+	host := os.Getenv("HOST")
+	if host == "" {
+		host = "localhost"
+	}
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
 
 	uniRepo := repositories.NewUniversityRepository()
 
@@ -42,8 +52,10 @@ func main() {
 	positionGroup := r.Group("/positions")
 	posHandler.SetupGroup(positionGroup)
 
-	log.Println("Server running on http://localhost:8080")
-	if err := r.Run(":8080"); err != nil {
+	addr := fmt.Sprintf("%s:%s", host, port)
+	log.Printf("Server running on http://%s\n", addr)
+
+	if err := r.Run(addr); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}
 }
