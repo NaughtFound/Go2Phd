@@ -24,10 +24,11 @@ func main() {
 
 	uniService := services.NewUniversityService(uniRepo)
 	posService := services.NewPositionService(uniRepo, clientID, clientSecret)
+	statService := services.NewStatsService(posService)
 	authService := services.NewAuthService(clientID, clientSecret, redirectURL)
 
 	uniHandler := handlers.NewUniversityHandler(uniService)
-	posHandler := handlers.NewPositionHandler(posService)
+	posHandler := handlers.NewPositionHandler(posService, statService)
 	authHandler := handlers.NewAuthHandler(authService)
 
 	r := gin.Default()

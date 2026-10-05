@@ -8,11 +8,15 @@ import (
 )
 
 type PositionHandler struct {
-	service *services.PositionService
+	positionService *services.PositionService
+	statsService    *services.StatsService
 }
 
-func NewPositionHandler(service *services.PositionService) *PositionHandler {
-	return &PositionHandler{service: service}
+func NewPositionHandler(positionService *services.PositionService, statsService *services.StatsService) *PositionHandler {
+	return &PositionHandler{
+		positionService: positionService,
+		statsService:    statsService,
+	}
 }
 
 func (h *PositionHandler) GetAllPositions(c *gin.Context) {
@@ -30,7 +34,7 @@ func (h *PositionHandler) GetAllPositions(c *gin.Context) {
 		return
 	}
 
-	positions, err := h.service.FetchAllPositions(refreshToken, spreadsheetID, sheetName)
+	positions, err := h.positionService.FetchAllPositions(refreshToken, spreadsheetID, sheetName)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -39,6 +43,32 @@ func (h *PositionHandler) GetAllPositions(c *gin.Context) {
 	c.JSON(http.StatusOK, positions)
 }
 
+func (h *PositionHandler) GetStats(c *gin.Context) {
+	refreshToken := c.GetHeader("X-Refresh-Token")
+	spreadsheetID := c.GetHeader("X-Spreadsheet-ID")
+	sheetName := c.DefaultQuery("sheet", "Sheet1")
+	groupBy := c.Query("group_by")
+
+	if refreshToken == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing required header: X-Refresh-Token"})
+		return
+	}
+
+	if spreadsheetID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing required header: X-Spreadsheet-ID"})
+		return
+	}
+
+	analytics, err := h.statsService.GetAnalytics(refreshToken, spreadsheetID, sheetName, groupBy)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, analytics)
+}
+
 func (h *PositionHandler) SetupGroup(r *gin.RouterGroup) {
 	r.GET("", h.GetAllPositions)
+	r.GET("/stats", h.GetStats)
 }
