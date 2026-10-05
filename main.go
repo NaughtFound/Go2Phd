@@ -9,13 +9,13 @@ import (
 
 func main() {
 	r := gin.Default()
-	userGroups := r.Group("users")
+	universityGroups := r.Group("universities")
 
-	repo := repositories.NewUserRepo()
-	service := services.NewUserService(repo)
-	handler := handlers.NewUserHandler(service)
+	repo := repositories.NewUniversityRepository()
+	service := services.NewUniversityService(repo)
+	handler := handlers.NewUniversityHandler(service)
 
-	handler.SetupGroup(userGroups)
+	handler.SetupGroup(universityGroups)
 
 	r.Run(":8080")
 }
