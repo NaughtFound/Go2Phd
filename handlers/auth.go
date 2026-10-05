@@ -17,7 +17,9 @@ func NewAuthHandler(service *services.AuthService) *AuthHandler {
 
 func (h *AuthHandler) Login(c *gin.Context) {
 	url := h.service.GetAuthURL()
-	c.Redirect(http.StatusTemporaryRedirect, url)
+	c.JSON(http.StatusOK, gin.H{
+		"auth_url": url,
+	})
 }
 
 func (h *AuthHandler) Callback(c *gin.Context) {

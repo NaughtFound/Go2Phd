@@ -16,35 +16,14 @@ func main() {
 		log.Println("Warning: No .env file found or error loading .env file")
 	}
 
-	spreadsheetID := os.Getenv("SPREADSHEET_ID")
 	clientID := os.Getenv("GOOGLE_CLIENT_ID")
 	clientSecret := os.Getenv("GOOGLE_CLIENT_SECRET")
 	redirectURL := os.Getenv("GOOGLE_REDIRECT_URL")
-	refreshToken := os.Getenv("GOOGLE_REFRESH_TOKEN")
-
-	if spreadsheetID == "" {
-		log.Fatalf("SPREADSHEET_ID environment variable is missing")
-	}
 
 	uniRepo := repositories.NewUniversityRepository()
 
-	var sheetsRepo *repositories.SheetsRepository
-	var err error
-
-	if refreshToken != "" && clientID != "" && clientSecret != "" {
-		log.Println("Initializing Google Sheets Repository using Refresh Token from environment")
-		sheetsRepo, err = repositories.NewSheetsRepositoryFromRefreshToken(clientID, clientSecret, refreshToken, spreadsheetID)
-	} else {
-		log.Println("Initializing Google Sheets Repository using credentials.json")
-		sheetsRepo, err = repositories.NewSheetsRepository("credentials.json", spreadsheetID)
-	}
-
-	if err != nil {
-		log.Fatalf("Failed to initialize Google Sheets repository: %v", err)
-	}
-
 	uniService := services.NewUniversityService(uniRepo)
-	posService := services.NewPositionService(sheetsRepo, uniRepo)
+	posService := services.NewPositionService(uniRepo, clientID, clientSecret)
 	authService := services.NewAuthService(clientID, clientSecret, redirectURL)
 
 	uniHandler := handlers.NewUniversityHandler(uniService)
